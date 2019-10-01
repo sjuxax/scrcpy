@@ -1,7 +1,9 @@
 #include "input_manager.h"
 
 #include <SDL2/SDL_assert.h>
-#include "convert.h"
+
+#include "config.h"
+#include "event_converter.h"
 #include "lock_util.h"
 #include "log.h"
 
@@ -102,7 +104,7 @@ press_back_or_turn_screen_on(struct controller *controller) {
     msg.type = CONTROL_MSG_TYPE_BACK_OR_SCREEN_ON;
 
     if (!controller_push_msg(controller, &msg)) {
-        LOGW("Could not request 'turn screen on'");
+        LOGW("Could not request 'press back or turn screen on'");
     }
 }
 
@@ -376,7 +378,7 @@ input_manager_process_key(struct input_manager *input_manager,
     }
 
     struct control_msg msg;
-    if (input_key_from_sdl_to_android(event, &msg)) {
+    if (convert_input_key(event, &msg)) {
         if (!controller_push_msg(controller, &msg)) {
             LOGW("Could not request 'inject keycode'");
         }
@@ -391,9 +393,7 @@ input_manager_process_mouse_motion(struct input_manager *input_manager,
         return;
     }
     struct control_msg msg;
-    if (mouse_motion_from_sdl_to_android(event,
-                                         input_manager->screen->frame_size,
-                                         &msg)) {
+    if (convert_mouse_motion(event, input_manager->screen->frame_size, &msg)) {
         if (!controller_push_msg(input_manager->controller, &msg)) {
             LOGW("Could not request 'inject mouse motion event'");
         }
@@ -437,9 +437,7 @@ input_manager_process_mouse_button(struct input_manager *input_manager,
     }
 
     struct control_msg msg;
-    if (mouse_button_from_sdl_to_android(event,
-                                         input_manager->screen->frame_size,
-                                         &msg)) {
+    if (convert_mouse_button(event, input_manager->screen->frame_size, &msg)) {
         if (!controller_push_msg(input_manager->controller, &msg)) {
             LOGW("Could not request 'inject mouse button event'");
         }
@@ -454,7 +452,7 @@ input_manager_process_mouse_wheel(struct input_manager *input_manager,
         .point = get_mouse_point(input_manager->screen),
     };
     struct control_msg msg;
-    if (mouse_wheel_from_sdl_to_android(event, position, &msg)) {
+    if (convert_mouse_wheel(event, position, &msg)) {
         if (!controller_push_msg(input_manager->controller, &msg)) {
             LOGW("Could not request 'inject mouse wheel event'");
         }
